@@ -240,7 +240,7 @@ def _create_parser():
     group.add_argument('--wait', action='store_true',
                        help='wait for user input, e.g., allow a debugger '
                             'to be attached')
-    group.add_argument('--slaveargs', metavar='ARGS')
+    group.add_argument('--subordinateargs', metavar='ARGS')
     group.add_argument('-S', '--start', metavar='START',
                        help='the name of the test at which to start.' +
                             more_details)
@@ -427,10 +427,10 @@ def _parse_args(args, **kwargs):
 
 
 def run_test_in_subprocess(testname, ns):
-    """Run the given test in a subprocess with --slaveargs.
+    """Run the given test in a subprocess with --subordinateargs.
 
     ns is the option Namespace parsed from command-line arguments. regrtest
-    is invoked in a subprocess with the --slaveargs argument; when the
+    is invoked in a subprocess with the --subordinateargs argument; when the
     subprocess exits, its return code, stdout and stderr are returned as a
     3-tuple.
     """
@@ -440,7 +440,7 @@ def run_test_in_subprocess(testname, ns):
     # required to spawn a new process with PGO flag on/off
     if ns.pgo:
         base_cmd = base_cmd + ['--pgo']
-    slaveargs = (
+    subordinateargs = (
             (testname, ns.verbose, ns.quiet),
             dict(huntrleaks=ns.huntrleaks,
                  use_resources=ns.use_resources,
@@ -450,7 +450,7 @@ def run_test_in_subprocess(testname, ns):
     # Running the child from the same working directory as regrtest's original
     # invocation ensures that TEMPDIR for the child is the same when
     # sysconfig.is_python_build() is true. See issue 15300.
-    popen = Popen(base_cmd + ['--slaveargs', json.dumps(slaveargs)],
+    popen = Popen(base_cmd + ['--subordinateargs', json.dumps(subordinateargs)],
                   stdout=PIPE, stderr=PIPE,
                   universal_newlines=True,
                   close_fds=(os.name != 'nt'),
@@ -537,8 +537,8 @@ def main(tests=None, **kwargs):
     if ns.wait:
         input("Press any key to continue...")
 
-    if ns.slaveargs is not None:
-        args, kwargs = json.loads(ns.slaveargs)
+    if ns.subordinateargs is not None:
+        args, kwargs = json.loads(ns.subordinateargs)
         if kwargs.get('huntrleaks'):
             unittest.BaseTestSuite._cleanup = False
         try:
@@ -1513,7 +1513,7 @@ def dash_R_cleanup(fs, ps, pic, zdc, abcs):
     mimetypes._default_mime_types()
     filecmp._cache.clear()
     struct._clearcache()
-    doctest.master = None
+    doctest.main = None
     try:
         import ctypes
     except ImportError:
